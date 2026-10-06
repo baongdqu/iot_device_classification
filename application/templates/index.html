@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Device Inventory & Network Traffic Monitor</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="navbar">
+            <div class="brand">
+                <div class="pulse-indicator"></div>
+                <div class="brand-text">
+                    <h1>IoT Sentinel Guard</h1>
+                    <span class="subtext">Hệ thống Giám sát & Tự động Lập danh mục Thiết bị IoT mạng Smart Home</span>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-outline">Dataset: UNSW Sydney</span>
+                <span class="badge badge-accent">Time-based Model: Active</span>
+                <span class="badge badge-live">● Live Gateway (14:cc:20:51:33:ea)</span>
+            </div>
+        </header>
+
+        <!-- KPI Metrics Banner -->
+        <section class="metrics-grid">
+            <div class="metric-card glass-panel">
+                <div class="metric-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">📡</div>
+                <div class="metric-info">
+                    <span class="metric-label">Mẫu cửa sổ đang giám sát</span>
+                    <h2 id="total-samples" class="metric-value">40</h2>
+                    <span class="metric-hint">Cửa sổ trượt 10 giây</span>
+                </div>
+            </div>
+
+            <div class="metric-card glass-panel">
+                <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🔌</div>
+                <div class="metric-info">
+                    <span class="metric-label">Thiết bị nhận diện được</span>
+                    <h2 id="unique-devices" class="metric-value">--</h2>
+                    <span class="metric-hint">Khớp với 20 thiết bị IoT</span>
+                </div>
+            </div>
+
+            <div class="metric-card glass-panel">
+                <div class="metric-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">⚠️</div>
+                <div class="metric-info">
+                    <span class="metric-label">Cảnh báo Thiết bị Lạ (Rogue)</span>
+                    <h2 id="rogue-alerts" class="metric-value" style="color: #ef4444;">0</h2>
+                    <span class="metric-hint">Độ tin cậy < 60%</span>
+                </div>
+            </div>
+
+            <div class="metric-card glass-panel">
+                <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">⚡</div>
+                <div class="metric-info">
+                    <span class="metric-label">Độ trễ suy diễn (Inference)</span>
+                    <h2 id="latency-val" class="metric-value" style="color: #10b981;">0.36 µs</h2>
+                    <span id="latency-mode" class="metric-hint">Chế độ Edge Router</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Control Bar: Model Selector & Actions -->
+        <section class="control-panel glass-panel">
+            <div class="control-group">
+                <label for="model-select"><strong>Mô hình Triển khai:</strong></label>
+                <select id="model-select" class="custom-select">
+                    <option value="decision_tree" selected>⚡ Decision Tree — Ultra-Edge Router (0.36 µs, 294 KB)</option>
+                    <option value="random_forest">🌲 Random Forest — Server Ensemble (9.63 µs, 97.87% Acc)</option>
+                    <option value="xgboost">🏆 XGBoost — Best Accuracy (24.83 µs, 79.74% F1)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="sample-slider">Số mẫu quét: <strong id="sample-count-lbl">40</strong></label>
+                <input type="range" id="sample-slider" min="10" max="150" value="40" step="10">
+            </div>
+
+            <div class="control-group">
+                <label for="threshold-slider">Ngưỡng cảnh báo lạ: <strong id="threshold-lbl">60%</strong></label>
+                <input type="range" id="threshold-slider" min="40" max="90" value="60" step="5">
+            </div>
+
+            <div class="action-buttons">
+                <button id="btn-simulate" class="btn btn-primary">
+                    <span>▶ Quét Lưu lượng Mới</span>
+                </button>
+                <button id="btn-auto-stream" class="btn btn-secondary">
+                    <span id="stream-text">🔄 Bật Giám sát Thời gian thực</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Analytics Charts Grid -->
+        <section class="charts-grid">
+            <div class="chart-card glass-panel">
+                <div class="chart-header">
+                    <h3>Phân bố Danh mục Thiết bị (Category Breakdown)</h3>
+                    <span class="chart-badge">Tỷ lệ theo loại</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card glass-panel">
+                <div class="chart-header">
+                    <h3>Băng thông & Tốc độ Gói tin (Traffic Volume)</h3>
+                    <span class="chart-badge">Bytes/sec & Pkts/sec</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Device Inventory Table -->
+        <section class="inventory-card glass-panel">
+            <div class="table-header">
+                <div>
+                    <h3>Bảng Danh mục Thiết bị IoT Đang Kết nối (Device Inventory)</h3>
+                    <span class="table-subtext">Được cập nhật tự động sau mỗi cửa sổ phân tích 10 giây</span>
+                </div>
+                <div class="table-actions">
+                    <input type="text" id="search-box" class="search-input" placeholder="🔍 Tìm kiếm thiết bị...">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Thiết bị Dự đoán (Predicted Model)</th>
+                            <th>Nhóm Chức năng</th>
+                            <th>Độ tin cậy (Confidence)</th>
+                            <th>Tốc độ gói (pkts/s)</th>
+                            <th>Băng thông (bytes/s)</th>
+                            <th>Giao thức TCP/UDP</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-tbody">
+                        <tr>
+                            <td colspan="8" class="text-center">Đang nạp dữ liệu kiểm tra...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Đồ án môn học NT120 — Nhập môn Trí tuệ Nhân tạo cho Mạng máy tính và An toàn thông tin | Đại học Công nghệ Thông tin (VNUHCM-UIT)</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

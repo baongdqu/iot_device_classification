@@ -1,0 +1,26 @@
+{
+    "num_features": 8,
+    "selected_features": [
+        "size_max",
+        "size_mean",
+        "size_std",
+        "size_min",
+        "byte_count",
+        "byte_rate",
+        "has_http_https",
+        "pkt_rate"
+    ],
+    "scaled_columns": [
+        "size_max_scaled",
+        "size_mean_scaled",
+        "size_std_scaled",
+        "size_min_scaled",
+        "byte_count_scaled",
+        "byte_rate_scaled",
+        "has_http_https_scaled",
+        "pkt_rate_scaled"
+    ],
+    "test_accuracy": 97.5,
+    "test_macro_f1": 75.53,
+    "file_size_kb": 319.2822265625
+}

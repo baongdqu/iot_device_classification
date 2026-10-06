@@ -1,0 +1,4 @@
+Feature Set,Num Features,RF Accuracy (%),RF Macro F1 (%),DT Accuracy (%),DT Macro F1 (%)
+Full 15 Features,15,97.86,79.51,97.53,76.11
+Top 8 Features,8,97.66,76.62,97.5,75.53
+Top 5 Minimal Features,5,97.59,78.44,97.24,74.51
