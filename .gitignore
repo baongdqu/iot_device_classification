@@ -38,6 +38,3 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
-# Large raw uncompressed CSVs (>100MB exceeds GitHub limit)
-# Note: All raw dataset files are fully preserved and tracked via dataset/*.csv.zip
-dataset/*.csv
