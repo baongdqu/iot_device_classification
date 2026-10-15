@@ -36,27 +36,43 @@ scaled_cols = metadata["scaled_columns"]
 raw_cols = metadata["feature_columns"]
 device_classes = metadata["device_classes"]
 
+# Tải metadata của mô hình rút gọn Edge Top 8 nếu có
+edge_meta_file = os.path.join(MODELS_DIR, "edge_model_metadata.json")
+if os.path.exists(edge_meta_file):
+    with open(edge_meta_file, "r", encoding="utf-8") as f:
+        edge_metadata = json.load(f)
+    edge_scaled_cols = edge_metadata.get("scaled_columns", scaled_cols)
+else:
+    edge_scaled_cols = scaled_cols
+
 # Tải sẵn các mô hình
 models = {
-    "xgboost": {
-        "name": "XGBoost (Best Accuracy - Server Mode)",
-        "type": "server",
-        "model": joblib.load(os.path.join(MODELS_DIR, "xgboost.joblib")),
-        "latency_us": 24.8,
+    "edge_top8": {
+        "name": "Decision Tree Top 8 (Edge Router - 319 KB)",
+        "type": "edge",
+        "model": joblib.load(os.path.join(MODELS_DIR, "edge_decision_tree_top8.joblib")),
+        "latency_us": 0.36,
+        "features": edge_scaled_cols
+    },
+    "decision_tree": {
+        "name": "Decision Tree Full 15 (Standard Edge - 294 KB)",
+        "type": "edge",
+        "model": joblib.load(os.path.join(MODELS_DIR, "decision_tree.joblib")),
+        "latency_us": 0.36,
         "features": scaled_cols
     },
     "random_forest": {
-        "name": "Random Forest (Ensemble - Server Mode)",
+        "name": "Random Forest (Server Ensemble - 97.87% Acc)",
         "type": "server",
         "model": joblib.load(os.path.join(MODELS_DIR, "random_forest.joblib")),
         "latency_us": 9.6,
         "features": scaled_cols
     },
-    "decision_tree": {
-        "name": "Decision Tree (Ultra-Edge - Router Mode)",
-        "type": "edge",
-        "model": joblib.load(os.path.join(MODELS_DIR, "decision_tree.joblib")),
-        "latency_us": 0.36,
+    "xgboost": {
+        "name": "XGBoost (Best Accuracy - Server Mode)",
+        "type": "server",
+        "model": joblib.load(os.path.join(MODELS_DIR, "xgboost.joblib")),
+        "latency_us": 24.8,
         "features": scaled_cols
     }
 }
@@ -133,8 +149,9 @@ def simulate_traffic():
     model = selected_model_info["model"]
 
     # Lấy mẫu ngẫu nhiên từ tập Test
+    feature_cols = selected_model_info.get("features", scaled_cols)
     sample_rows = test_df.sample(n=sample_size, random_state=int(time.time()) % 1000).copy()
-    X_input = sample_rows[scaled_cols].values
+    X_input = sample_rows[feature_cols].values
 
     # Đo thời gian suy diễn thực tế
     t0 = time.time()

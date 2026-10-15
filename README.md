@@ -18,12 +18,13 @@ Dự án tập trung vào bài toán **nhận diện và phân loại thiết b�
 ### 1. So sánh các mô hình Machine Learning (Full 15 Features)
 | Mô hình | Accuracy | Macro F1 | Weighted F1 | Training Time | Model Size |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Random Forest** ⭐ | **97.86%** | **79.51%** | **97.68%** | 10.37s | 62.0 MB |
-| **XGBoost** | 97.80% | 78.47% | 97.63% | 2.59s | 4.5 MB |
-| **Decision Tree** | 97.53% | 76.11% | 97.35% | 1.23s | 294 KB |
-| **MLP Neural Net** | 97.10% | 68.96% | 96.88% | 85.04s | 289 KB |
-| **k-NN (k=5)** | 97.05% | 68.64% | 96.86% | 0.05s | 7.9 MB |
-| **Logistic Regression** | 87.97% | 40.54% | 86.85% | 7.94s | 3.7 KB |
+| **Random Forest** ⭐ | **97.87%** | 79.55% | **97.89%** | 4.06s | 62.0 MB |
+| **XGBoost** 🏆 | 97.80% | **79.74%** | 97.83% | 29.38s | 4.5 MB |
+| **Decision Tree** | 97.53% | 76.11% | 97.65% | 0.84s | 294 KB |
+| **MLP Neural Net** | 97.06% | 73.97% | 97.21% | 116.45s | 289 KB |
+| **k-NN (k=5)** | 96.46% | 68.07% | 96.58% | 0.46s | 7.9 MB |
+| **Logistic Regression** | 87.06% | 51.03% | 85.73% | 44.73s | 3.7 KB |
+| **Dummy (Majority)** | 16.45% | 1.57% | 4.65% | 0.08s | 0.9 KB |
 
 ### 2. Rút gọn đặc trưng cho Edge Computing (Feature Pruning)
 | Bộ đặc trưng | Số lượng | Random Forest Acc | Random Forest F1 | Decision Tree Acc | Decision Tree F1 | Thời gian huấn luyện (DT) |
@@ -40,8 +41,8 @@ Dự án tập trung vào bài toán **nhận diện và phân loại thiết b�
 
 ```
 ├── application/                         # Mã nguồn Web Dashboard IoT Sentinel Guard
-│   ├── app.py                           # Flask backend API
-│   ├── static/                          # CSS giao diện & JS xử lý biểu đồ
+│   ├── app.py                           # Flask backend API (Hỗ trợ Dual-Mode Edge & Server)
+│   ├── static/                          # CSS giao diện & JS xử lý biểu đồ Chart.js
 │   └── templates/                       # Giao diện HTML Dashboard
 ├── course/                              # Tài liệu môn học & Notebook phân tích
 │   └── NT120_DoAn_Nhom05_PhanLoaiThietBiIoT.ipynb
@@ -49,20 +50,23 @@ Dự án tập trung vào bài toán **nhận diện và phân loại thiết b�
 │   ├── List_Of_Devices.txt              # Ánh xạ MAC Address sang tên thiết bị
 │   └── *.csv.zip                        # 20 file zip dữ liệu lưu lượng từng ngày
 ├── data_preprocessed/                   # Dữ liệu train/test và các encoder/scaler
-│   ├── train.csv                        # Tập huấn luyện (Time-based: 23-25/09)
-│   ├── test.csv                         # Tập kiểm thử (Time-based: 26/09)
-│   ├── scaler.joblib                    # Bộ chuẩn hóa dữ liệu
-│   ├── label_encoder.joblib             # Bộ mã hóa nhãn thiết bị
-│   └── category_encoder.joblib          # Bộ mã hóa danh mục nhóm thiết bị
+│   ├── train.csv                        # Tập huấn luyện (Time-based: 23-25/09, 160k mẫu)
+│   ├── test.csv                         # Tập kiểm thử (Time-based: 26/09, 52k mẫu)
+│   ├── scaler.joblib                    # Bộ chuẩn hóa dữ liệu (StandardScaler fit on Train)
+│   ├── label_encoder.joblib             # Bộ mã hóa nhãn thiết bị (21 classes)
+│   └── category_encoder.joblib          # Bộ mã hóa danh mục nhóm thiết bị (8 classes)
 ├── models/                              # Các mô hình đã huấn luyện (.joblib)
 │   ├── edge_decision_tree_top8.joblib   # Mô hình siêu nhẹ (~319 KB) cho Edge Router
-│   ├── best_model.joblib                # Mô hình Random Forest / XGBoost tốt nhất
+│   ├── best_model.joblib                # Mô hình tốt nhất (XGBoost / Random Forest)
 │   └── ...
 ├── reports/                             # Biểu đồ đánh giá & kết quả benchmark
 │   ├── benchmark_results.csv            # Bảng so sánh chỉ số các mô hình
-│   ├── confusion_matrix_best.png        # Ma trận nhầm lẫn
-│   ├── feature_importance.png           # Biểu đồ tầm quan trọng đặc trưng
-│   └── model_comparison.png             # Biểu đồ so sánh trực quan
+│   ├── feature_pruning_results.csv      # Bảng kết quả thực nghiệm rút gọn đặc trưng
+│   └── figures/                         # Thư mục biểu đồ trực quan hóa
+│       ├── confusion_matrix_best.png    # Ma trận nhầm lẫn
+│       ├── feature_importance.png       # Biểu đồ tầm quan trọng đặc trưng
+│       ├── feature_pruning_comparison.png # Biểu đồ so sánh rút gọn đặc trưng
+│       └── model_comparison.png         # Biểu đồ so sánh trực quan
 ├── preprocess.py                        # Pipeline tiền xử lý & trích xuất đặc trưng
 ├── evaluate_all.py                      # Kịch bản huấn luyện & đánh giá benchmark
 ├── tune_and_prune.py                    # Kịch bản rút gọn đặc trưng & tối ưu Edge AI
